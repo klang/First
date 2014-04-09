@@ -30,7 +30,11 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -48,6 +52,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class FirstBuilder extends Builder {
     
     public final boolean runOnSlaves;
+    public final boolean randomQuote;
     
     /**
      * Required static constructor. This is used to create 'One Project Builder' BuildStep in the list-box item on your jobs
@@ -81,8 +86,9 @@ public class FirstBuilder extends Builder {
     }
     
     @DataBoundConstructor
-    public FirstBuilder(final boolean runOnSlaves) { 
+    public FirstBuilder(final boolean runOnSlaves, final boolean randomQuote) { 
         this.runOnSlaves = runOnSlaves;
+        this.randomQuote = randomQuote;
     }
 
     /**
@@ -108,18 +114,36 @@ public class FirstBuilder extends Builder {
         listener.getLogger().println("My First Builder");
         
         String javaVersion = null;
+        String theQuote = null;
         
         //Value [runOnSlaves] from build step configuration.
-        if ( runOnSlaves) {
+        if ( runOnSlaves ) {
             //Tell jenkins to act upon the current workspace (Can be remote, or local)
             javaVersion = build.getWorkspace().act(new FirstRemoteOperation());
         } else {
             //Else, force this to be performed on master, regardless.
             javaVersion = new FirstRemoteOperation().invoke(null, null);
         }
-
+        
         listener.getLogger().println( "Found this java version: " + javaVersion);
         
+        
+        if ( randomQuote ) {
+            // http://www.iheartquotes.com/api/v1/random
+            URL url = new URL ("http://www.iheartquotes.com/api/v1/random");
+            URLConnection yc = url.openConnection();
+            BufferedReader in = new BufferedReader(
+                                new InputStreamReader(
+                                yc.getInputStream()));
+            String inputLine;
+            StringBuilder sb = new StringBuilder(256);
+            sb.append("-----------\n");
+            while ((inputLine = in.readLine()) != null) 
+              sb.append(inputLine);            
+            sb.append("\n-----------");
+            in.close();          
+            listener.getLogger().println(sb.toString());
+        }      
         //Extract our action from the build, null if no action found.
         FirstBuildAction action = build.getAction(FirstBuildAction.class);
         

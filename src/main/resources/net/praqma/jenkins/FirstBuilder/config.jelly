@@ -4,4 +4,7 @@
     <f:entry title="Execute buildstep on slave" field="runOnSlaves">
         <f:checkbox/>
     </f:entry>
+    <f:entry title="Get random Quote " field="randomQuote">
+        <f:checkbox/>
+    </f:entry>
 </j:jelly>   
